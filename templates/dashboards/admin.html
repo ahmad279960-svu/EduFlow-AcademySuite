@@ -5,61 +5,83 @@
 {% block content %}
 <div class="container-fluid">
     <h1 class="h2 mb-4">System Dashboard</h1>
-    <p class="text-muted">An overview of the entire EduFlow platform.</p>
+    <p class="text-muted">A real-time overview of the entire EduFlow platform.</p>
 
-    <div class="row">
+    <div class="row" id="stats-row">
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-start border-success border-4 h-100 py-2">
+            <div class="card border-start border-primary border-4 h-100 py-2 shadow-sm">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col me-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Users</div>
-                            <div class="h5 mb-0 fw-bold text-gray-800">4,521</div>
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Users</div>
+                            <div id="total-users-stat" class="h5 mb-0 fw-bold text-gray-800">Loading...</div>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-users fa-2x text-gray-300"></i>
-                        </div>
+                        <div class="col-auto"><i class="fas fa-users fa-2x text-muted"></i></div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-start border-primary border-4 h-100 py-2">
+            <div class="card border-start border-success border-4 h-100 py-2 shadow-sm">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col me-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Courses</div>
-                            <div class="h5 mb-0 fw-bold text-gray-800">150</div>
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Courses</div>
+                            <div id="total-courses-stat" class="h5 mb-0 fw-bold text-gray-800">Loading...</div>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-book-open fa-2x text-gray-300"></i>
-                        </div>
+                        <div class="col-auto"><i class="fas fa-book-open fa-2x text-muted"></i></div>
                     </div>
                 </div>
             </div>
         </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-info border-4 h-100 py-2 shadow-sm">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Enrollments</div>
+                            <div id="total-enrollments-stat" class="h5 mb-0 fw-bold text-gray-800">Loading...</div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-clipboard-list fa-2x text-muted"></i></div>
+                    </div>
+                </div>
+            </div>
         </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-warning border-4 h-100 py-2 shadow-sm">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Completed Courses</div>
+                            <div id="completed-enrollments-stat" class="h5 mb-0 fw-bold text-gray-800">Loading...</div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-check-circle fa-2x text-muted"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="row">
         <div class="col-lg-7">
-            <div class="card shadow mb-4">
+            <div class="card shadow-sm mb-4">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">User Registrations (Last 12 Months)</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">Most Enrolled Courses</h6>
                 </div>
                 <div class="card-body">
-                    <div class="chart-area">
-                        <canvas id="userRegistrationsChart"></canvas>
+                    <div class="chart-area" style="height: 320px;">
+                        <canvas id="topCoursesChart"></canvas>
                     </div>
                 </div>
             </div>
         </div>
          <div class="col-lg-5">
-            <div class="card shadow mb-4">
+            <div class="card shadow-sm mb-4">
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary">User Roles Distribution</h6>
                 </div>
                 <div class="card-body">
-                    <div class="chart-pie pt-4">
+                    <div class="chart-pie pt-4" style="height: 320px;">
                         <canvas id="userRolesChart"></canvas>
                     </div>
                 </div>
@@ -70,54 +92,69 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    // Chart 1: User Registrations (Line Chart)
-    const userRegCtx = document.getElementById('userRegistrationsChart').getContext('2d');
-    const userRegistrationsChart = new Chart(userRegCtx, {
-        type: 'line',
-        data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            datasets: [{
-                label: 'New Users',
-                data: [120, 150, 190, 210, 250, 230, 270, 300, 310, 350, 380, 420], // Example data
-                backgroundColor: 'rgba(110, 203, 78, 0.1)',
-                borderColor: 'rgba(110, 203, 78, 1)',
-                borderWidth: 2,
-                tension: 0.3,
-                fill: true,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
+    const api_url = "{% url 'api:admin-dashboard-analytics' %}";
 
-    // Chart 2: User Roles (Doughnut Chart)
-    const userRolesCtx = document.getElementById('userRolesChart').getContext('2d');
-    const userRolesChart = new Chart(userRolesCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Students', 'Instructors', 'Supervisors', 'Admins', 'B2B Clients'],
-            datasets: [{
-                label: 'User Roles',
-                data: [3500, 500, 50, 21, 450], // Example data
-                backgroundColor: [
-                    '#1DA1F2',
-                    '#17BF63',
-                    '#FFAD1F',
-                    '#E0245E',
-                    '#657786'
-                ],
-                hoverOffset: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
+    fetch(api_url)
+        .then(response => response.json())
+        .then(data => {
+            // Populate Stat Cards
+            document.getElementById('total-users-stat').textContent = data.platform_stats.total_users;
+            document.getElementById('total-courses-stat').textContent = data.platform_stats.total_courses;
+            document.getElementById('total-enrollments-stat').textContent = data.platform_stats.total_enrollments;
+            document.getElementById('completed-enrollments-stat').textContent = data.platform_stats.completed_enrollments;
+
+            // Chart 1: User Roles (Doughnut Chart)
+            const userRolesCtx = document.getElementById('userRolesChart').getContext('2d');
+            const roleLabels = data.role_distribution.map(item => {
+                let role = item.role.replace('_', ' ').toLowerCase();
+                return role.replace(/\b\w/g, l => l.toUpperCase()); // Capitalize words
+            });
+            const roleCounts = data.role_distribution.map(item => item.count);
+            
+            new Chart(userRolesCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: roleLabels,
+                    datasets: [{
+                        label: 'User Roles',
+                        data: roleCounts,
+                        backgroundColor: ['#0d6efd', '#28a745', '#ffc107', '#6c757d', '#dc3545'],
+                        hoverOffset: 4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // Chart 2: Top Courses (Bar Chart)
+            const topCoursesCtx = document.getElementById('topCoursesChart').getContext('2d');
+            const courseLabels = data.top_courses.map(course => course.title);
+            const courseCounts = data.top_courses.map(course => course.enrollment_count);
+
+            new Chart(topCoursesCtx, {
+                type: 'bar',
+                data: {
+                    labels: courseLabels,
+                    datasets: [{
+                        label: 'Number of Enrollments',
+                        data: courseCounts,
+                        backgroundColor: 'rgba(13, 110, 253, 0.5)',
+                        borderColor: 'rgba(13, 110, 253, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        })
+        .catch(error => console.error("Error fetching analytics data:", error));
 });
 </script>
 {% endblock %}

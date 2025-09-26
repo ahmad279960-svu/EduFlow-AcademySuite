@@ -1,5 +1,5 @@
 /**
- * Main stylesheet for EduFlow-AcademySuite.
+ * Main stylesheet for EduFlow-AcademySuite v2.1
  *
  * This file contains custom component styles, overrides for Bootstrap, and
  * layout definitions that apply the visual theme defined in theme.css.
@@ -8,8 +8,8 @@
 /* 1. GENERAL & BODY STYLES */
 body {
     font-family: var(--font-secondary);
-    background-color: var(--color-light-gray);
-    color: var(--color-black);
+    background-color: var(--color-bg-light);
+    color: var(--color-text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -21,32 +21,40 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 a {
-    color: var(--color-green);
+    color: var(--color-info);
     text-decoration: none;
     transition: color 0.2s ease;
 }
 
 a:hover {
-    color: var(--color-green-dark);
+    color: #0b5ed7; /* Darker info color */
 }
 
-.btn-primary {
-    background-color: var(--color-green);
-    border-color: var(--color-green);
-    font-family: var(--font-primary);
+.btn {
+    border-radius: var(--border-radius);
     font-weight: 500;
     transition: all 0.2s ease-in-out;
 }
 
-.btn-primary:hover, .btn-primary:focus {
-    background-color: var(--color-green-dark);
-    border-color: var(--color-green-dark);
-    box-shadow: 0 4px 12px rgba(110, 203, 78, 0.3);
+.btn-primary {
+    background-color: var(--color-info);
+    border-color: var(--color-info);
 }
 
-.form-control:focus {
-    border-color: var(--color-green);
-    box-shadow: 0 0 0 0.25rem rgba(110, 203, 78, 0.25);
+.btn-primary:hover, .btn-primary:focus {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
+}
+
+.form-control, .form-select {
+    border-radius: var(--border-radius);
+    border-color: var(--color-border);
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--color-info);
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
 /* 2. LAYOUT: SIDEBAR & MAIN CONTENT */
@@ -61,14 +69,16 @@ a:hover {
     padding: 1.5rem 1rem;
     display: flex;
     flex-direction: column;
-    box-shadow: var(--box-shadow-md);
+    box-shadow: var(--box-shadow-lg);
     z-index: 1030;
+    transition: width 0.3s ease;
 }
 
 .main-content {
     margin-left: var(--sidebar-width);
     padding: 2rem;
     padding-top: calc(var(--navbar-height) + 2rem);
+    transition: margin-left 0.3s ease;
 }
 
 .navbar-main {
@@ -77,14 +87,14 @@ a:hover {
     left: var(--sidebar-width);
     right: 0;
     height: var(--navbar-height);
-    background-color: var(--color-white);
-    border-bottom: 1px solid var(--color-medium-gray);
+    background-color: var(--color-bg-panel);
+    border-bottom: 1px solid var(--color-border);
     z-index: 1020;
     padding: 0 2rem;
+    transition: left 0.3s ease;
 }
 
 /* 3. COMPONENT STYLES */
-
 /* Sidebar Components */
 .sidebar .logo {
     margin-bottom: 2.5rem;
@@ -92,6 +102,7 @@ a:hover {
 }
 .sidebar .logo img {
     max-width: 180px;
+    filter: brightness(0) invert(1); /* Make logo white */
 }
 .sidebar .nav-link {
     font-family: var(--font-primary);
@@ -109,79 +120,50 @@ a:hover {
     text-align: center;
 }
 .sidebar .nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--color-navy-light);
     color: var(--color-white);
 }
 .sidebar .nav-link.active {
-    background-color: var(--color-green);
+    background-color: var(--color-info);
     color: var(--color-white);
     font-weight: 600;
-}
-.sidebar .user-profile {
-    margin-top: auto;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-    padding-top: 1rem;
 }
 
 /* Card Styles */
 .card {
-    border: none;
+    border: 1px solid var(--color-border);
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow-md);
     margin-bottom: 1.5rem;
+    background-color: var(--color-bg-panel);
 }
 .card-header {
-    background-color: var(--color-white);
-    border-bottom: 1px solid var(--color-medium-gray);
+    background-color: var(--color-bg-panel);
+    border-bottom: 1px solid var(--color-border);
     font-family: var(--font-primary);
     font-weight: 600;
     color: var(--color-navy);
-    padding: 1.25rem 1.5rem;
+    padding: 1rem 1.5rem;
 }
 
 /* Table Styles */
 .table {
-    --bs-table-striped-bg: var(--color-light-gray);
+    --bs-table-striped-bg: var(--color-bg-light);
+    --bs-table-hover-bg: #f1f3f5;
 }
 .table th {
     font-family: var(--font-primary);
     font-weight: 600;
-    color: var(--color-dark-gray);
-}
-
-/* Login Page Styles */
-.login-container {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--color-light-gray);
-}
-.login-card {
-    max-width: 450px;
-    width: 100%;
-}
-.login-logo {
-    max-width: 250px;
-    margin-bottom: 1.5rem;
-}
-
-/* Landing Page Styles */
-.landing-hero {
-    background-color: var(--color-navy);
-    color: var(--color-white);
-    padding: 8rem 0;
-}
-.landing-hero h1 {
-    font-size: 3.5rem;
-    font-weight: 700;
-    color: var(--color-white);
+    color: var(--color-text-secondary);
 }
 
 /* HTMX Indicators */
 .htmx-indicator {
     display: none;
 }
-
-/* Utility Classes */
-.fw-600 { font-weight: 600 !important; }
+.htmx-request .htmx-indicator {
+    display: inline-block;
+}
+.htmx-request.htmx-indicator {
+    display: inline-block;
+}

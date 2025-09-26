@@ -2,7 +2,7 @@
 Database models for the 'enrollment' application.
 
 This module defines the models that track a student's state and progress, such as
-which courses they are enrolled in, which lessons they have completed, and their
+which courses they are enrolled in, their progress status for each lesson, and their
 performance on quizzes. This granular structure is essential for detailed analytics.
 """
 import uuid
@@ -10,8 +10,9 @@ from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-# To avoid circular imports, it's best practice to import apps this way
+# To avoid circular imports, models from other apps are imported this way.
 from apps.learning.models import Course, Lesson, Question, Answer
+from apps.users.models import CustomUser
 
 
 class Enrollment(models.Model):
@@ -28,10 +29,10 @@ class Enrollment(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     student = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        CustomUser,
         on_delete=models.CASCADE,
         related_name="enrollments",
-        limit_choices_to={"role": "student"},
+        limit_choices_to={"role": CustomUser.Roles.STUDENT},
     )
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="enrollments")
     enrollment_date = models.DateTimeField(auto_now_add=True)
@@ -56,18 +57,36 @@ class Enrollment(models.Model):
         return f"{self.student.username} enrolled in {self.course.title}"
 
 
-class CompletedLesson(models.Model):
+class LessonProgress(models.Model):
     """
-    A through model to track which lessons a student has completed for an enrollment.
+    Tracks a student's detailed progress and interaction with a single lesson
+    within an enrollment. This replaces the simpler CompletedLesson model.
     """
-    enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE, related_name="completed_lessons")
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name="completions")
-    completed_at = models.DateTimeField(auto_now_add=True)
+
+    class ProgressStatus(models.TextChoices):
+        NOT_STARTED = "not_started", _("Not Started")
+        IN_PROGRESS = "in_progress", _("In Progress")
+        COMPLETED = "completed", _("Completed")
+        LATE = "late", _("Late")
+
+    enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE, related_name="lesson_progress")
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name="progress_records")
+    status = models.CharField(
+        _("status"), max_length=20, choices=ProgressStatus.choices, default=ProgressStatus.NOT_STARTED
+    )
+    attendance_date = models.DateTimeField(_("attendance date"), null=True, blank=True)
+    instructor_notes = models.TextField(_("instructor notes"), blank=True)
+    student_rating = models.PositiveSmallIntegerField(
+        _("student rating"), null=True, blank=True,
+        help_text=_("Student's rating of the lesson from 1 to 5")
+    )
+    started_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = ("enrollment", "lesson")
-        verbose_name = _("Completed Lesson")
-        verbose_name_plural = _("Completed Lessons")
+        verbose_name = _("Lesson Progress")
+        verbose_name_plural = _("Lessons Progress")
 
 
 class QuizAttempt(models.Model):

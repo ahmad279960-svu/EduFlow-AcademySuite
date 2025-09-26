@@ -1,6 +1,6 @@
 # Django and Core Dependencies
 django==5.0.7
-psycopg2-binary==2.9.9
+psycopg2==2.9.9
 gunicorn==22.0.0
 python-dotenv==1.0.1
 requests==2.31.0
@@ -12,6 +12,7 @@ djangorestframework-simplejwt==5.3.1
 # Asynchronous Task Processing
 celery==5.4.0
 redis==5.0.4
+eventlet==0.35.2 # Added for Celery on Windows
 
 # Frontend and Templating
 django-htmx==1.17.2
@@ -26,4 +27,4 @@ django-debug-toolbar==4.4.1
 # Utilities
 Pillow==10.3.0
 Faker==25.2.0
-tqdm==4.66.4 # <--- تمت إضافة هذه المكتبة لشريط التقدم
+tqdm==4.66.4

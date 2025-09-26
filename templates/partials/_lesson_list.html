@@ -1,17 +1,34 @@
-<ul class="list-group">
+<ul class="list-group list-group-flush" id="lesson-list">
     {% for lesson in lessons %}
-    <li class="list-group-item d-flex justify-content-between align-items-center">
-        <div>
-            <i class="fa-solid fa-grip-vertical me-2 text-muted"></i>
-            <strong>{{ lesson.title }}</strong>
-            <span class="badge bg-secondary ms-2">{{ lesson.get_content_type_display }}</span>
+    <li class="list-group-item d-flex justify-content-between align-items-center p-3" data-id="{{ lesson.pk }}">
+        <div class="d-flex align-items-center">
+            <i class="fa-solid fa-grip-vertical drag-handle me-3 text-muted" style="cursor: grab;"></i>
+            
+            {% if lesson.content_type == 'video' %}
+                <i class="fa-solid fa-video fa-fw me-2 text-primary"></i>
+            {% elif lesson.content_type == 'text' %}
+                <i class="fa-solid fa-file-alt fa-fw me-2 text-info"></i>
+            {% elif lesson.content_type == 'quiz' %}
+                <i class="fa-solid fa-question-circle fa-fw me-2 text-success"></i>
+            {% elif lesson.content_type == 'pdf' %}
+                <i class="fa-solid fa-file-pdf fa-fw me-2 text-danger"></i>
+            {% endif %}
+
+            <strong class="me-3">{{ lesson.title }}</strong>
+            <span class="badge bg-secondary rounded-pill">{{ lesson.get_content_type_display }}</span>
         </div>
         <div>
-            <a href="#" class="btn btn-sm btn-outline-primary">Edit</a>
-            <a href="#" class="btn btn-sm btn-outline-danger">Delete</a>
+            <a href="#" class="btn btn-sm btn-outline-primary">
+                <i class="fa-solid fa-pencil"></i> Edit
+            </a>
+            <a href="#" class="btn btn-sm btn-outline-danger">
+                <i class="fa-solid fa-trash"></i> Delete
+            </a>
         </div>
     </li>
     {% empty %}
-    <li class="list-group-item text-center text-muted">No lessons have been added to this course yet.</li>
+    <li class="list-group-item text-center text-muted p-4">
+        No lessons have been added to this content yet.
+    </li>
     {% endfor %}
 </ul>

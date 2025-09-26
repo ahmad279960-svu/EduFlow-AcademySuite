@@ -2,19 +2,23 @@
 Django admin configuration for the 'enrollment' application.
 
 This module registers the enrollment-related models with the Django admin site,
-allowing administrators to view and manage student progress and quiz data.
+allowing administrators to view and manage student progress, attendance,
+and quiz data in a detailed manner.
 """
 from django.contrib import admin
-from .models import Enrollment, CompletedLesson, QuizAttempt, QuizAnswer
+from .models import Enrollment, LessonProgress, QuizAttempt, QuizAnswer
 
 
-class CompletedLessonInline(admin.TabularInline):
+class LessonProgressInline(admin.TabularInline):
     """
-    Inline admin for CompletedLesson within an Enrollment.
+    Inline admin for LessonProgress within an Enrollment.
+    Provides a detailed view of each lesson's status for the student.
     """
-    model = CompletedLesson
+    model = LessonProgress
     extra = 0
-    readonly_fields = ('lesson', 'completed_at')
+    fields = ('lesson', 'status', 'attendance_date', 'student_rating', 'instructor_notes')
+    readonly_fields = ('lesson',)
+    autocomplete_fields = ('lesson',)
 
 
 class QuizAttemptInline(admin.TabularInline):
@@ -32,10 +36,10 @@ class EnrollmentAdmin(admin.ModelAdmin):
     Admin configuration for the Enrollment model.
     """
     list_display = ("student", "course", "status", "progress", "enrollment_date")
-    list_filter = ("status", "course")
+    list_filter = ("status", "course__title")
     search_fields = ("student__username", "course__title")
     readonly_fields = ("enrollment_date",)
-    inlines = [CompletedLessonInline, QuizAttemptInline]
+    inlines = [LessonProgressInline, QuizAttemptInline]
 
 
 @admin.register(QuizAttempt)
@@ -44,7 +48,7 @@ class QuizAttemptAdmin(admin.ModelAdmin):
     Admin configuration for the QuizAttempt model.
     """
     list_display = ('id', 'enrollment', 'lesson', 'score', 'submitted_at')
-    list_filter = ('lesson__course',)
+    list_filter = ('lesson__course__title',)
     search_fields = ('enrollment__student__username', 'lesson__title')
 
 

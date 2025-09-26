@@ -2,10 +2,11 @@
 Django Forms for the 'learning' application.
 
 This module provides forms for creating and editing core learning objects like
-Courses and Learning Paths, to be used in the application's frontend views.
+Courses, Workshops, and Learning Paths, to be used in the application's
+frontend views.
 """
 from django import forms
-from .models import Course, LearningPath, Lesson
+from .models import Course, Workshop, LearningPath, Lesson
 from apps.users.models import CustomUser
 
 
@@ -23,6 +24,33 @@ class CourseForm(forms.ModelForm):
             "category",
             "status",
             "cover_image_url",
+        ]
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 4}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Filter the instructor dropdown to only show users with the 'instructor' role.
+        self.fields['instructor'].queryset = CustomUser.objects.filter(
+            role=CustomUser.Roles.INSTRUCTOR
+        )
+
+
+class WorkshopForm(forms.ModelForm):
+    """
+    Form for creating and updating a Workshop.
+    """
+    class Meta:
+        model = Workshop
+        fields = [
+            "title",
+            "description",
+            "instructor",
+            "workshop_type",
+            "category",
+            "duration_days",
+            "total_hours",
         ]
         widgets = {
             'description': forms.Textarea(attrs={'rows': 4}),
@@ -61,4 +89,7 @@ class LessonForm(forms.ModelForm):
     """
     class Meta:
         model = Lesson
-        fields = ["title", "content_type"]
+        fields = ["title", "content_type", "content_data"]
+        widgets = {
+            'content_data': forms.Textarea(attrs={'rows': 3}),
+        }

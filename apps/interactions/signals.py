@@ -2,22 +2,24 @@
 Django signals for the 'interactions' application.
 
 This module defines signal receivers for interaction events, such as a student
-posting a new question, to trigger external workflows like instructor notifications.
+posting a new question, to trigger asynchronous external workflows like instructor
+notifications via Celery tasks.
 """
-import requests
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.conf import settings
 from .models import DiscussionThread
+from apps.core.tasks import send_webhook_task
 
 
 @receiver(post_save, sender=DiscussionThread)
 def trigger_new_question_webhook(sender, instance, created, **kwargs):
     """
-    Sends a webhook when a new discussion thread (question) is created.
+    Dispatches a task to send a webhook when a new discussion thread is created.
 
-    This is used to notify an external service (like n8n) which can then process
-    the event and send a notification to the relevant course instructor.
+    This is used to notify an external service (like n8n), which can then process
+    the event and send a notification to the relevant course instructor, without
+    blocking the user's request.
 
     :param sender: The model class that sent the signal.
     :param instance: The actual instance being saved.
@@ -25,7 +27,7 @@ def trigger_new_question_webhook(sender, instance, created, **kwargs):
     :param kwargs: Keyword arguments.
     """
     if created:
-        webhook_url = getattr(settings, "N8N_NEW_QUESTION_WEBHOOK_URL", None)
+        webhook_url = getattr(settings, "N8N_QUESTION_POSTED_WEBHOOK_URL", None)
         if not webhook_url:
             return
 
@@ -42,9 +44,5 @@ def trigger_new_question_webhook(sender, instance, created, **kwargs):
             "instructor_email": instance.lesson.course.instructor.email,
         }
 
-        try:
-            # This should be an asynchronous task in production.
-            requests.post(webhook_url, json=payload, timeout=5)
-        except requests.RequestException:
-            # Log the error but do not let it fail the main request.
-            pass
+        # Dispatch the task to be executed by a Celery worker in the background.
+        send_webhook_task.delay(webhook_url, payload)

@@ -7,12 +7,13 @@ exposed as custom actions on a viewset and are designed to be called via HTMX.
 """
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from apps.enrollment.models import Enrollment, CompletedLesson, QuizAttempt, QuizAnswer
+from apps.enrollment.models import Enrollment, LessonProgress, QuizAttempt, QuizAnswer
 from apps.learning.models import Lesson, Answer
 from apps.enrollment.services import calculate_progress
 from .serializers import EnrollmentSerializer, QuizSubmissionSerializer
@@ -22,8 +23,8 @@ class EnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
     """
     A viewset for handling student enrollments and course interactions.
 
-    This viewset is primarily read-only for the enrollment list but provides
-    critical custom actions for course progression.
+    This viewset provides critical custom actions for course progression, designed
+    to be called from a reactive HTMX frontend.
     """
     queryset = Enrollment.objects.all()
     serializer_class = EnrollmentSerializer
@@ -40,23 +41,32 @@ class EnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
         """
         Marks a specific lesson as complete for the given enrollment.
 
+        This action creates or updates a LessonProgress record to 'completed'
+        and sets the attendance date. It then triggers a recalculation of the
+        overall course progress.
+
         Expects a POST request with {'lesson_id': 'uuid'}.
         """
         enrollment = self.get_object()
         lesson_id = request.data.get('lesson_id')
         lesson = get_object_or_404(Lesson, id=lesson_id, course=enrollment.course)
 
-        # Create the completion record if it doesn't exist.
-        CompletedLesson.objects.get_or_create(enrollment=enrollment, lesson=lesson)
+        # Create or update the LessonProgress record.
+        progress, created = LessonProgress.objects.get_or_create(
+            enrollment=enrollment, lesson=lesson
+        )
+        progress.status = LessonProgress.ProgressStatus.COMPLETED
+        progress.attendance_date = timezone.now()
+        progress.save()
 
-        # Update the last accessed lesson
+        # Update the last accessed lesson for the enrollment.
         enrollment.last_accessed_lesson = lesson
         enrollment.save(update_fields=['last_accessed_lesson'])
 
         # Recalculate and update the overall course progress.
         calculate_progress(enrollment.id)
 
-        # Refresh the enrollment object to get the latest progress
+        # Refresh the enrollment object to get the latest progress.
         enrollment.refresh_from_db()
 
         return Response(
@@ -95,7 +105,6 @@ class EnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
                 if str(correct_answer.id) == answer_id:
                     correct_answers += 1
                 
-                # Record the user's answer
                 selected_answer = Answer.objects.get(id=answer_id)
                 QuizAnswer.objects.create(
                     attempt=attempt,
@@ -111,8 +120,15 @@ class EnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
         attempt.save()
         
         # Mark the quiz lesson as complete after submission
-        CompletedLesson.objects.get_or_create(enrollment=enrollment, lesson=lesson)
+        progress, created = LessonProgress.objects.get_or_create(enrollment=enrollment, lesson=lesson)
+        progress.status = LessonProgress.ProgressStatus.COMPLETED
+        progress.attendance_date = timezone.now()
+        progress.save()
+        
         calculate_progress(enrollment.id)
 
         result_url = reverse('learning:quiz-result', kwargs={'attempt_id': attempt.id})
-        return Response({'status': 'success', 'score': attempt.score, 'result_url': result_url}, status=status.HTTP_200_OK)
+        return Response(
+            {'status': 'success', 'score': attempt.score, 'result_url': result_url},
+            status=status.HTTP_200_OK
+        )

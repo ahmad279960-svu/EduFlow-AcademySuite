@@ -1,117 +1,164 @@
-# apps/core/management/commands/seed_data.py
+"""
+Management command to seed the database with rich and diverse dummy data.
 
+This command populates the database with a complete set of interconnected objects,
+including users, courses, workshops, learning paths, contracts, and enrollments,
+to provide a realistic environment for testing and demonstration.
+"""
 import random
-import datetime
+from datetime import timedelta
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
-from django.contrib.auth.hashers import make_password
 from faker import Faker
 from tqdm import tqdm
 
 from apps.users.models import CustomUser
-from apps.learning.models import Course, Lesson, LearningPath, LearningPathCourse
-from apps.enrollment.models import Enrollment, CompletedLesson
+from apps.learning.models import Course, Workshop, Lesson, LearningPath, LearningPathCourse
+from apps.enrollment.models import Enrollment, LessonProgress
 from apps.contracts.models import Contract
 from apps.enrollment.services import calculate_progress
 
 class Command(BaseCommand):
-    help = 'Seeds the database with a smaller, more focused and logical set of test data.'
+    help = 'Seeds the database with a large, interconnected set of dummy data.'
 
     @transaction.atomic
     def handle(self, *args, **kwargs):
         if CustomUser.objects.count() > 1:
-            self.stdout.write(self.style.WARNING('Database already contains data. Seeding skipped.'))
+            self.stdout.write(self.style.WARNING('Database appears to be already seeded. Aborting command.'))
             return
 
-        self.stdout.write(self.style.SUCCESS('🚀 Starting focused database seeding...'))
+        self.stdout.write(self.style.SUCCESS('🚀 Starting comprehensive database seeding...'))
         fake = Faker()
-        password = make_password('password')
 
-        # -- 1. Create Focused Users --
-        self.stdout.write('👤 Creating a focused set of users...')
-        supervisors = CustomUser.objects.bulk_create([
-            CustomUser(username='supervisor.one', email='supervisor.one@example.com', password=password, role=CustomUser.Roles.SUPERVISOR, full_name='Sarah Supervisor'),
-            CustomUser(username='supervisor.two', email='supervisor.two@example.com', password=password, role=CustomUser.Roles.SUPERVISOR, full_name='Sam Supervisor'),
-        ])
-        instructors = CustomUser.objects.bulk_create([
-            CustomUser(username='instructor.python', email='instructor.python@example.com', password=password, role=CustomUser.Roles.INSTRUCTOR, full_name='Dr. Python Coder'),
-            CustomUser(username='instructor.marketing', email='instructor.marketing@example.com', password=password, role=CustomUser.Roles.INSTRUCTOR, full_name='Marketa Digital'),
-            CustomUser(username='instructor.design', email='instructor.design@example.com', password=password, role=CustomUser.Roles.INSTRUCTOR, full_name='Desiree Signer'),
-            CustomUser(username='instructor.business', email='instructor.business@example.com', password=password, role=CustomUser.Roles.INSTRUCTOR, full_name='Adam Capital'),
-            CustomUser(username='instructor.datasci', email='instructor.datasci@example.com', password=password, role=CustomUser.Roles.INSTRUCTOR, full_name='Data Dan'),
-        ])
-        students = CustomUser.objects.bulk_create([CustomUser(username=f'student.{i}', email=f'student.{i}@example.com', password=password, role=CustomUser.Roles.STUDENT, full_name=fake.name()) for i in range(30)])
-        b2b_clients = CustomUser.objects.bulk_create([
-            CustomUser(username='client.techcorp', email='contact@techcorp.com', password=password, role=CustomUser.Roles.THIRD_PARTY, full_name='TechCorp Inc.'),
-            CustomUser(username='client.bizsolutions', email='contact@bizsolutions.com', password=password, role=CustomUser.Roles.THIRD_PARTY, full_name='Biz Solutions Ltd.'),
-        ])
+        # -- 1. Create Users --
+        self.stdout.write('👤 Creating users...')
 
-        # -- 2. Create Logical Courses --
-        self.stdout.write('📚 Creating logical courses and lessons...')
-        # (This section remains unchanged)
-        courses = []
-        course_defs = [
-            {'title': 'Python for Beginners', 'instructor': instructors[0], 'category': 'Programming'},
-            {'title': 'Advanced Django', 'instructor': instructors[0], 'category': 'Programming'},
-            {'title': 'SEO Masterclass', 'instructor': instructors[1], 'category': 'Marketing'},
-            {'title': 'Social Media Strategy', 'instructor': instructors[1], 'category': 'Marketing'},
-            {'title': 'UI/UX Design Fundamentals', 'instructor': instructors[2], 'category': 'Design'},
-            {'title': 'Introduction to Financial Modeling', 'instructor': instructors[3], 'category': 'Business'},
-            {'title': 'Machine Learning with Python', 'instructor': instructors[4], 'category': 'Data Science'},
+        # Check if the superuser from the previous step exists, if not, create one.
+        if not CustomUser.objects.filter(username='admin').exists():
+            CustomUser.objects.create_superuser('admin', 'admin@example.com', 'password', role=CustomUser.Roles.ADMIN, full_name='Platform Admin')
+
+        supervisors = [
+            CustomUser.objects.create_user(
+                username=f'supervisor{i}', email=f'supervisor{i}@example.com', password='password',
+                role=CustomUser.Roles.SUPERVISOR, full_name=fake.name()
+            ) for i in range(5)
         ]
-        for i in range(13):
-            instr = random.choice(instructors)
-            course_defs.append({'title': f'{instr.full_name.split()[1]}\'s Guide to {fake.job()}', 'instructor': instr, 'category': random.choice(['Programming', 'Business'])})
-        for i, c_def in enumerate(tqdm(course_defs, 'Creating Courses')):
+        instructors = [
+            CustomUser.objects.create_user(
+                username=f'instructor{i}', email=f'instructor{i}@example.com', password='password',
+                role=CustomUser.Roles.INSTRUCTOR, full_name=fake.name()
+            ) for i in range(20)
+        ]
+        students = [
+            CustomUser.objects.create_user(
+                username=f'student{i}', email=f'student{i}@example.com', password='password',
+                role=CustomUser.Roles.STUDENT, full_name=fake.name()
+            ) for i in tqdm(range(500), 'Creating students')
+        ]
+
+        # Ensure unique company names for usernames
+        b2b_clients = []
+        for i in range(10):
+            company_name = fake.unique.company().lower().replace(' ', '').replace(',', '')
+            b2b_clients.append(
+                CustomUser.objects.create_user(
+                    username=company_name, email=f'client{i}@company.com', password='password',
+                    role=CustomUser.Roles.THIRD_PARTY, full_name=f'{fake.company()} Client'
+                )
+            )
+
+        # -- 2. Create Courses, Workshops, and Lessons --
+        self.stdout.write('📚 Creating courses, workshops, and lessons...')
+        courses = []
+        course_categories = ['Data Science', 'Web Development', 'Digital Marketing', 'Business', 'Design', 'Cloud Computing']
+        for i in tqdm(range(50), 'Creating Courses'):
             course = Course.objects.create(
-                title=c_def['title'], slug=f'course-{fake.slug()}-{i}', description=fake.paragraph(nb_sentences=5),
-                instructor=c_def['instructor'], category=c_def['category'], status=Course.CourseStatus.PUBLISHED
+                title=f'{random.choice(["Mastering", "Advanced", "Intro to"])} {random.choice(course_categories)}',
+                slug=f'course-{fake.unique.slug()}-{i}',
+                description=fake.paragraph(nb_sentences=8),
+                instructor=random.choice(instructors),
+                category=random.choice(course_categories),
+                status=Course.CourseStatus.PUBLISHED
             )
             courses.append(course)
-            for j in range(random.randint(8, 15)):
-                Lesson.objects.create(course=course, title=f'Module {j+1}: {fake.sentence(nb_words=4)}', order=j, content_type=random.choice([Lesson.ContentType.VIDEO, Lesson.ContentType.TEXT]), content_data={'url': fake.url()})
+            for j in range(random.randint(10, 25)):
+                Lesson.objects.create(
+                    course=course, title=f'Module {j+1}: {fake.sentence(nb_words=4)}', order=j,
+                    content_type=random.choice([Lesson.ContentType.VIDEO, Lesson.ContentType.TEXT, Lesson.ContentType.PDF]),
+                    content_data={'url': fake.url()}
+                )
 
-        # -- 3. Create Logical Learning Paths --
-        self.stdout.write('🛤️ Creating logical learning paths...')
-        # === THE FIX IS HERE ===
-        path_course_relations = []
-        
-        web_dev_path = LearningPath.objects.create(title='Web Development Track', description='Become a full-stack web developer.', supervisor=supervisors[0])
-        web_dev_courses = [courses[0], courses[1], courses[6]] # Python, Django, Machine Learning
-        for order, course in enumerate(web_dev_courses):
-            path_course_relations.append(LearningPathCourse(learning_path=web_dev_path, course=course, order=order))
+        workshop_content_types = [choice[0] for choice in Lesson.ContentType.choices if choice[0] != 'quiz']
+        for i in tqdm(range(15), 'Creating Workshops'):
+            workshop = Workshop.objects.create(
+                title=f'{fake.job()} Workshop',
+                description=fake.paragraph(nb_sentences=6),
+                instructor=random.choice(instructors),
+                workshop_type=random.choice([wt[0] for wt in Workshop.WorkshopType.choices]),
+                category=random.choice([wc[0] for wc in Workshop.WorkshopCategory.choices]),
+                duration_days=random.randint(1, 5),
+                total_hours=random.randint(4, 20)
+            )
+            for j in range(random.randint(5, 10)):
+                 Lesson.objects.create(
+                    workshop=workshop, title=f'Session {j+1}: {fake.sentence(nb_words=5)}', order=j,
+                    content_type=random.choice(workshop_content_types),
+                    content_data={'details': fake.text()}
+                )
 
-        marketing_path = LearningPath.objects.create(title='Digital Marketing Certificate', description='Master the art of digital marketing.', supervisor=supervisors[1])
-        marketing_courses = [courses[2], courses[3]] # SEO, Social Media
-        for order, course in enumerate(marketing_courses):
-            path_course_relations.append(LearningPathCourse(learning_path=marketing_path, course=course, order=order))
-            
-        LearningPathCourse.objects.bulk_create(path_course_relations)
-        
-        # -- 4. Create Contracts and Link Employees --
-        self.stdout.write('💼 Creating B2B contracts and linking employees...')
-        # (This section remains unchanged, but we'll re-run it for a clean state)
-        tech_corp_contract = Contract.objects.create(title='TechCorp Employee Training 2025', client=b2b_clients[0], start_date=timezone.now(), end_date=timezone.now() + datetime.timedelta(days=365))
-        tech_corp_contract.enrolled_students.set(students[0:10])
-        tech_corp_contract.learning_paths.add(web_dev_path)
+        # -- 3. Create Learning Paths --
+        self.stdout.write('🛤️ Creating learning paths...')
+        learning_paths = []
+        for i in range(10):
+            path = LearningPath.objects.create(
+                title=f'Professional Diploma in {random.choice(course_categories)}',
+                description=fake.paragraph(nb_sentences=4),
+                supervisor=random.choice(supervisors)
+            )
+            path_courses = random.sample(courses, k=random.randint(3, 7))
+            for order, course in enumerate(path_courses):
+                LearningPathCourse.objects.create(learning_path=path, course=course, order=order)
+            learning_paths.append(path)
 
-        biz_solutions_contract = Contract.objects.create(title='Biz Solutions Marketing Upskill', client=b2b_clients[1], start_date=timezone.now(), end_date=timezone.now() + datetime.timedelta(days=365))
-        biz_solutions_contract.enrolled_students.set(students[10:20])
-        biz_solutions_contract.learning_paths.add(marketing_path)
+        # -- 4. Create B2B Contracts --
+        self.stdout.write('💼 Creating B2B contracts...')
+        student_pool = list(students)
+        for client in b2b_clients:
+            num_students_in_contract = random.randint(20, 50)
+            if len(student_pool) < num_students_in_contract:
+                break # Stop if we run out of students
+            contract_students = random.sample(student_pool, k=num_students_in_contract)
+            student_pool = [s for s in student_pool if s not in contract_students] # Remove assigned students
 
-        # -- 5. Enroll students and simulate progress --
-        self.stdout.write('📈 Enrolling students and simulating progress...')
-        # (This section remains unchanged)
-        for student in tqdm(students, 'Enrolling students'):
+            contract = Contract.objects.create(
+                title=f'Training Contract for {client.full_name}', client=client,
+                start_date=timezone.now() - timedelta(days=random.randint(30, 180)),
+                end_date=timezone.now() + timedelta(days=365)
+            )
+            contract.enrolled_students.set(contract_students)
+            contract.learning_paths.add(random.choice(learning_paths))
+
+        # -- 5. Create Enrollments and Simulate Progress --
+        self.stdout.write('📈 Creating enrollments and simulating progress...')
+        for student in tqdm(random.sample(students, k=400), 'Enrolling students'):
             course_to_enroll = random.choice(courses)
             enrollment, created = Enrollment.objects.get_or_create(student=student, course=course_to_enroll)
-            if created and random.random() > 0.5:
+
+            if created:
                 lessons_in_course = list(course_to_enroll.lessons.all())
                 if lessons_in_course:
-                    completed_count = int(len(lessons_in_course) * random.uniform(0.2, 1.0))
-                    for lesson in random.sample(lessons_in_course, k=completed_count):
-                        CompletedLesson.objects.create(enrollment=enrollment, lesson=lesson)
+                    completed_count = int(len(lessons_in_course) * random.uniform(0.1, 0.99))
+                    lessons_to_complete = random.sample(lessons_in_course, k=completed_count)
+
+                    for lesson in lessons_to_complete:
+                        LessonProgress.objects.create(
+                            enrollment=enrollment, 
+                            lesson=lesson,
+                            status=LessonProgress.ProgressStatus.COMPLETED,
+                            attendance_date=timezone.now() - timedelta(days=random.randint(1, 30))
+                        )
+
                     calculate_progress(enrollment.id)
-        
-        self.stdout.write(self.style.SUCCESS('✅ Focused database seeding complete!'))
+
+        self.stdout.write(self.style.SUCCESS('✅ Database seeding complete! The system is ready for testing.'))

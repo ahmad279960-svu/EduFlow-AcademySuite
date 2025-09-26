@@ -16,6 +16,7 @@ api_patterns = [
     path("learning/", include("apps.learning.api.urls")),
     path("enrollment/", include("apps.enrollment.api.urls")),
     path("interactions/", include("apps.interactions.api.urls")),
+    path("reports/", include("apps.reports.api.urls")), # New entry for reports API
 ]
 
 # Main URL Patterns

@@ -2,21 +2,23 @@
 Database models for the 'learning' application.
 
 This module defines the core data structures for all educational content,
-including courses, lessons, learning paths, and their relationships, fully
-realizing the relational schema designed for v2.0.
+including courses, workshops, lessons, learning paths, and their relationships,
+fully realizing the relational schema designed for v2.1.
 """
 import uuid
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
+from apps.users.models import CustomUser
 
 
 class Course(models.Model):
     """
     Represents a single course within the platform.
 
-    A course is a collection of lessons, created and managed by an instructor.
-    It has a status to control its visibility and lifecycle.
+    A course is a structured collection of lessons, created and managed by an
+    instructor, designed for self-paced learning.
     """
 
     class CourseStatus(models.TextChoices):
@@ -30,9 +32,9 @@ class Course(models.Model):
     description = models.TextField(_("description"))
     instructor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,  # Prevent deleting an instructor with active courses
+        on_delete=models.PROTECT,
         related_name="courses_taught",
-        limit_choices_to={"role": "instructor"},
+        limit_choices_to={"role": CustomUser.Roles.INSTRUCTOR},
     )
     category = models.CharField(_("category"), max_length=100)
     status = models.CharField(
@@ -51,12 +53,57 @@ class Course(models.Model):
         return self.title
 
 
+class Workshop(models.Model):
+    """
+    Represents a workshop, which is a more hands-on, often scheduled,
+    learning experience compared to a course.
+    """
+
+    class WorkshopType(models.TextChoices):
+        THEORETICAL = "theoretical", _("Theoretical")
+        PRACTICAL = "practical", _("Practical")
+        MIXED = "mixed", _("Mixed")
+
+    class WorkshopCategory(models.TextChoices):
+        ACADEMIC = "academic", _("Academic")
+        PROFESSIONAL = "professional", _("Professional")
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(_("title"), max_length=255)
+    description = models.TextField(_("description"))
+    instructor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="workshops_led",
+        limit_choices_to={"role": CustomUser.Roles.INSTRUCTOR},
+    )
+    workshop_type = models.CharField(
+        _("workshop type"), max_length=20, choices=WorkshopType.choices
+    )
+    category = models.CharField(
+        _("category"), max_length=20, choices=WorkshopCategory.choices
+    )
+    duration_days = models.PositiveIntegerField(_("duration in days"))
+    total_hours = models.PositiveIntegerField(_("total hours"))
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = _("Workshop")
+        verbose_name_plural = _("Workshops")
+
+    def __str__(self):
+        return self.title
+
+
 class Lesson(models.Model):
     """
-    Represents a single lesson within a course.
+    Represents a single lesson, which can be part of either a Course or a Workshop.
 
     A lesson can be of various content types (video, text, quiz). The actual
-    content data is stored flexibly in a JSONB field.
+    content data is stored flexibly in a JSONB field. A lesson must belong to
+    either a course or a workshop, but not both.
     """
 
     class ContentType(models.TextChoices):
@@ -64,9 +111,15 @@ class Lesson(models.Model):
         TEXT = "text", _("Text")
         QUIZ = "quiz", _("Quiz")
         PDF = "pdf", _("PDF Document")
+        PRACTICAL = "practical", _("Practical") # Added for workshops
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="lessons")
+    course = models.ForeignKey(
+        Course, on_delete=models.CASCADE, related_name="lessons", null=True, blank=True
+    )
+    workshop = models.ForeignKey(
+        Workshop, on_delete=models.CASCADE, related_name="lessons", null=True, blank=True
+    )
     title = models.CharField(_("title"), max_length=200)
     order = models.PositiveIntegerField(_("order"), default=0)
     content_type = models.CharField(
@@ -80,13 +133,20 @@ class Lesson(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["course", "order"]
-        unique_together = ("course", "order")
+        ordering = ["order"]
         verbose_name = _("Lesson")
         verbose_name_plural = _("Lessons")
+        constraints = [
+            models.CheckConstraint(
+                check=(Q(course__isnull=False) & Q(workshop__isnull=True)) |
+                      (Q(course__isnull=True) & Q(workshop__isnull=False)),
+                name="lesson_parent_link_must_be_exclusive"
+            )
+        ]
 
     def __str__(self):
-        return f"{self.course.title} - Lesson {self.order}: {self.title}"
+        parent_title = self.course.title if self.course else self.workshop.title
+        return f"{parent_title} - Lesson {self.order}: {self.title}"
 
 
 class Question(models.Model):
@@ -142,7 +202,7 @@ class LearningPath(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         related_name="learning_paths_supervised",
-        limit_choices_to={"role": "supervisor"},
+        limit_choices_to={"role": CustomUser.Roles.SUPERVISOR},
     )
     courses = models.ManyToManyField(
         Course,

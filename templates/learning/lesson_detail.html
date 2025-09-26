@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}{{ lesson.title }} | {{ block.super }}{% endblock %}
 
@@ -9,21 +10,28 @@
             <h1 class="h2 mb-1">{{ lesson.title }}</h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="#">{{ course.title }}</a></li>
+                    <li class="breadcrumb-item"><a href="#">{{ content_object.title }}</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Lesson {{ lesson.order }}</li>
                 </ol>
             </nav>
         </div>
         <div>
-            <button class="btn btn-success btn-lg">
+            <button class="btn btn-success btn-lg" 
+                    hx-post="#" 
+                    hx-vals='{"lesson_id": "{{ lesson.pk }}"}'
+                    hx-target="#progress-indicator"
+                    hx-swap="innerHTML">
                 <i class="fa-solid fa-check me-2"></i>Complete & Continue
             </button>
+            <span id="progress-indicator" class="htmx-indicator">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+            </span>
         </div>
     </div>
 
     <div class="row">
         <div class="col-lg-8">
-            <div class="card">
+            <div class="card mb-4">
                 <div class="card-body p-4">
                     <div class="bg-dark rounded text-white d-flex align-items-center justify-content-center" style="min-height: 450px;">
                         <p class="fs-4">Lesson Content Area</p>
@@ -31,7 +39,7 @@
                 </div>
             </div>
 
-            <div class="card mt-4">
+            <div class="card">
                 <div class="card-header">
                     <ul class="nav nav-tabs card-header-tabs">
                         <li class="nav-item">
@@ -46,7 +54,7 @@
                         </li>
                     </ul>
                 </div>
-                <div class="card-body tab-content">
+                <div class="card-body tab-content p-3">
                     <div class="tab-pane fade show active" id="discussion">
                         </div>
                     <div class="tab-pane fade" id="ai-assistant">
@@ -58,13 +66,16 @@
         <div class="col-lg-4">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">{{ course.title }}</h5>
+                    <h5 class="mb-0">{{ content_object.title }}</h5>
                 </div>
                 <div class="list-group list-group-flush">
-                    {% for l in course.lessons.all %}
-                    <a href="{% url 'learning:lesson-detail' l.pk %}" class="list-group-item list-group-item-action {% if l.pk == lesson.pk %}active{% endif %}">
-                        Lesson {{ l.order }}: {{ l.title }}
-                    </a>
+                    {% for l in content_object.lessons.all %}
+                    <a href="{% url 'learning:lesson-detail' l.pk %}" 
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if l.pk == lesson.pk %}active{% endif %}">
+                        <span>
+                            Lesson {{ l.order }}: {{ l.title }}
+                        </span>
+                        </a>
                     {% endfor %}
                 </div>
             </div>

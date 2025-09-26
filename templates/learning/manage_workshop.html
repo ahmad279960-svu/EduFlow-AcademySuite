@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Manage: {{ course.title }} | {{ block.super }}{% endblock %}
+{% block title %}Manage: {{ workshop.title }} | {{ block.super }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h2 mb-1">Manage Course Content</h1>
-            <p class="text-muted mb-0">Organize lessons for <strong>{{ course.title }}</strong></p>
+            <h1 class="h2 mb-1">Manage Workshop Content</h1>
+            <p class="text-muted mb-0">Organize lessons for <strong>{{ workshop.title }}</strong></p>
         </div>
         <div>
             <a href="#" class="btn btn-outline-secondary">
-                <i class="fa-solid fa-gear me-2"></i>Course Settings
+                <i class="fa-solid fa-gear me-2"></i>Workshop Settings
             </a>
             <button class="btn btn-primary"
                     hx-get="#" 
@@ -31,7 +31,7 @@
         </div>
         <div class="card-body p-0">
             <div id="lesson-list-container">
-                {% include 'partials/_lesson_list.html' with lessons=course.lessons.all %}
+                {% include 'partials/_lesson_list.html' with lessons=workshop.lessons.all %}
             </div>
         </div>
     </div>
