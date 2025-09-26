@@ -1,0 +1,36 @@
+{% load discussion_tags %}
+
+<div class="mb-3">
+    <a href="#" class="btn btn-sm btn-outline-secondary"
+       hx-get="{% url 'interactions:discussion-list' thread.lesson.pk %}"
+       hx-target="#discussion-container">
+       <i class="fa-solid fa-arrow-left me-2"></i>Back to All Discussions
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h4 class="mb-0">{{ thread.title }}</h4>
+    </div>
+    <div class="card-body">
+        <p>{{ thread.question|linebreaks }}</p>
+        <small class="text-muted">Asked by {{ thread.student.username }} on {{ thread.created_at|date:"F d, Y" }}</small>
+    </div>
+</div>
+
+<h5 class="mb-3">Replies ({{ thread.posts.count }})</h5>
+{% for post in thread.posts.all %}
+<div class="card mb-3">
+    <div class="card-body">
+        <p>{{ post.reply_text|linebreaks }}</p>
+        <small class="text-muted">Replied by {{ post.user.username }} on {{ post.created_at|date:"F d, Y" }}</small>
+    </div>
+</div>
+{% endfor %}
+
+<div class="card">
+    <div class="card-body">
+        <h6>Your Reply</h6>
+        {% render_post_form thread %}
+    </div>
+</div>

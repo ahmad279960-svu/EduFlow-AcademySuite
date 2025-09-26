@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz Results | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="col-lg-8 mx-auto">
+        <div class="card text-center">
+            <div class="card-header">
+                <h2>Quiz Results</h2>
+            </div>
+            <div class="card-body p-5">
+                <h3 class="card-title">You Scored:</h3>
+                <p class="display-1 fw-bold text-success">85%</p>
+                <p class="text-muted">Great job! You have successfully completed the quiz.</p>
+                <a href="#" class="btn btn-primary mt-3">Continue to Next Lesson</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+<div class="container-fluid d-flex align-items-center justify-content-end">
+    <div class="dropdown">
+        <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="{{ user.avatar_url|default:'https://via.placeholder.com/40' }}" alt="" width="40" height="40" class="rounded-circle me-2">
+            <div class="d-flex flex-column text-start">
+                <strong class="fw-600">{{ user.full_name|default:user.username }}</strong>
+                <small class="text-muted">{{ user.friendly_role }}</small>
+            </div>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end text-small shadow" aria-labelledby="dropdownUser1">
+            <li><a class="dropdown-item" href="#">Profile</a></li>
+            <li><a class="dropdown-item" href="#">Settings</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <form class="d-inline" method="post" action="{% url 'core:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="dropdown-item">Sign out</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+</div>

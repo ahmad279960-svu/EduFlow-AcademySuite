@@ -1,0 +1,11 @@
+<div id="discussion-container">
+    <div hx-get="{% url 'interactions:discussion-list' lesson.pk %}"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+        <div class="text-center p-3">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading discussions...</span>
+            </div>
+        </div>
+    </div>
+</div>

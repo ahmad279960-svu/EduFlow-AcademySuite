@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Reports Dashboard | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h2 mb-4">Reports & Analytics</h1>
+    <p class="text-muted">Generate and download system-wide reports.</p>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Report Generator</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-4">
+                        <label class="form-label">Report Type</label>
+                        <select class="form-select" name="report_type">
+                            <option>Student Performance</option>
+                            <option>Course Completion Rates</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                         <label class="form-label">Start Date</label>
+                         <input type="date" class="form-control" name="start_date">
+                    </div>
+                     <div class="col-md-3">
+                         <label class="form-label">End Date</label>
+                         <input type="date" class="form-control" name="end_date">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">Generate Report</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

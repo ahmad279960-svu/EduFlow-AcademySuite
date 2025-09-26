@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Manage: {{ course.title }} | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h2 mb-4">Manage Course: {{ course.title }}</h1>
+    
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Lesson Structure</h5>
+            <button class="btn btn-primary">
+                <i class="fa-solid fa-plus me-2"></i>Add New Lesson
+            </button>
+        </div>
+        <div class="card-body">
+            <div id="lesson-list-container">
+                {% include 'partials/_lesson_list.html' with lessons=course.lessons.all %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+/**
+ * Theme file for EduFlow-AcademySuite.
+ *
+ * This file defines the core visual identity of the application, including
+ * the color palette derived from the logo, typography settings using Google Fonts,
+ * and other foundational style variables.
+ */
+
+/* 1. FONT IMPORTS */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto:wght@400;500&display=swap');
+
+/* 2. ROOT VARIABLES */
+:root {
+    /* Color Palette (from logo) */
+    --color-navy: #1A2E44;         /* Deep blue for primary backgrounds, sidebars */
+    --color-green: #6ECB4E;        /* Vibrant green for accents, CTAs, highlights */
+    --color-green-dark: #58a53e;   /* Darker green for hover states */
+    
+    /* Neutral & Text Colors */
+    --color-white: #FFFFFF;
+    --color-light-gray: #F5F7FA;   /* Background color for main content area */
+    --color-medium-gray: #E1E8ED;  /* Borders, dividers */
+    --color-dark-gray: #657786;    /* Secondary text */
+    --color-black: #14171A;        /* Primary text */
+
+    /* UI Feedback Colors */
+    --color-danger: #E0245E;
+    --color-warning: #FFAD1F;
+    --color-success: #17BF63;
+    --color-info: #1DA1F2;
+
+    /* Typography */
+    --font-primary: 'Poppins', sans-serif; /* For headings and prominent text */
+    --font-secondary: 'Roboto', sans-serif; /* For body text and UI elements */
+    
+    /* Spacing & Sizing */
+    --sidebar-width: 260px;
+    --navbar-height: 70px;
+    --border-radius: 8px;
+
+    /* Shadows */
+    --box-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --box-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+}

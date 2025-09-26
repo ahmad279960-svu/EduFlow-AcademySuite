@@ -1,0 +1,63 @@
+#
+# Docker Compose configuration for EduFlow-AcademySuite v2.0
+# This file defines and orchestrates the multi-container application services
+# for a local development environment.
+#
+version: '3.8'
+
+services:
+  # 1. Web Service (Django Application)
+  web:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    container_name: eduflow_web
+    command: gunicorn --bind 0.0.0.0:8000 academy_suite.wsgi:application
+    volumes:
+      - ..:/var/www/app  # Mount the project directory for live code reloading
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../.env          # Load environment variables from the .env file
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  # 2. Database Service (PostgreSQL)
+  db:
+    image: postgres:15-alpine
+    container_name: eduflow_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/  # Persist database data
+    env_file:
+      - ../.env
+    ports:
+      - "5432:5432" # Expose port for local connections if needed
+    restart: unless-stopped
+
+  # 3. Cache & Message Broker Service (Redis)
+  redis:
+    image: redis:7-alpine
+    container_name: eduflow_redis
+    restart: unless-stopped
+
+  # 4. Celery Worker Service (for background tasks)
+  # This service uses the same image as the web app but runs the Celery command.
+  celery_worker:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    container_name: eduflow_celery_worker
+    command: celery -A academy_suite worker -l info
+    volumes:
+      - ..:/var/www/app
+    env_file:
+      - ../.env
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+# Named volume for persistent PostgreSQL data
+volumes:
+  postgres_data:

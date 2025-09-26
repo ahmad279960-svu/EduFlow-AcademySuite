@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Build: {{ learning_path.title }} | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-1">Learning Path Builder</h1>
+            <p class="text-muted mb-0">Drag and drop courses to build the '{{ learning_path.title }}' path.</p>
+        </div>
+        <button id="save-structure-btn" class="btn btn-primary">
+            <span class="spinner-border spinner-border-sm htmx-indicator" role="status" aria-hidden="true"></span>
+            Save Structure
+        </button>
+    </div>
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Available Courses</h5>
+                </div>
+                <div class="card-body" style="min-height: 500px;">
+                    <ul id="available-courses" class="list-group list-group-flush">
+                        {% for course in available_courses %}
+                        <li class="list-group-item" data-id="{{ course.id }}">
+                            <i class="fa-solid fa-grip-vertical me-2"></i>
+                            <strong>{{ course.title }}</strong><br>
+                            <small class="text-muted">{{ course.category }}</small>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Path Structure</h5>
+                </div>
+                <div class="card-body" style="min-height: 500px; background-color: var(--color-light-gray);">
+                     <ul id="path-courses" class="list-group">
+                        {% for course in learning_path.courses.all %}
+                        <li class="list-group-item" data-id="{{ course.id }}">
+                           <i class="fa-solid fa-grip-vertical me-2"></i>
+                           <strong>{{ course.title }}</strong><br>
+                           <small class="text-muted">{{ course.category }}</small>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const availableEl = document.getElementById('available-courses');
+    const pathEl = document.getElementById('path-courses');
+    const saveBtn = document.getElementById('save-structure-btn');
+
+    // Initialize Sortable for both lists
+    new Sortable(availableEl, {
+        group: 'shared',
+        animation: 150
+    });
+
+    const pathSortable = new Sortable(pathEl, {
+        group: 'shared',
+        animation: 150
+    });
+
+    // Handle save button click
+    saveBtn.addEventListener('click', function() {
+        const courseIds = pathSortable.toArray();
+        htmx.ajax('POST', `/api/v1/learning/learning-paths/{{ learning_path.pk }}/update-structure/`, {
+            values: { course_ids: courseIds },
+            indicator: this.querySelector('.htmx-indicator'),
+            swap: 'none'
+        }).then(data => {
+            // Can show a success message here
+            console.log('Structure saved successfully!');
+        });
+    });
+});
+</script>
+{% endblock %}

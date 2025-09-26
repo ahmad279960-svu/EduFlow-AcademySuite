@@ -1,0 +1,17 @@
+<ul class="list-group">
+    {% for lesson in lessons %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+            <i class="fa-solid fa-grip-vertical me-2 text-muted"></i>
+            <strong>{{ lesson.title }}</strong>
+            <span class="badge bg-secondary ms-2">{{ lesson.get_content_type_display }}</span>
+        </div>
+        <div>
+            <a href="#" class="btn btn-sm btn-outline-primary">Edit</a>
+            <a href="#" class="btn btn-sm btn-outline-danger">Delete</a>
+        </div>
+    </li>
+    {% empty %}
+    <li class="list-group-item text-center text-muted">No lessons have been added to this course yet.</li>
+    {% endfor %}
+</ul>

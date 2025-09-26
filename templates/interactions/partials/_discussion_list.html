@@ -1,0 +1,26 @@
+{% load discussion_tags %}
+
+<div class="mb-4">
+    <h4>Ask a New Question</h4>
+    {% render_thread_form lesson %}
+</div>
+
+<div id="thread-list">
+    <h4 class="mb-3">Existing Discussions</h4>
+    {% for thread in threads %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">{{ thread.title }}</h5>
+            <p class="card-text text-muted">
+                Asked by {{ thread.student.username }} on {{ thread.created_at|date:"F d, Y" }}
+            </p>
+            <a href="#" class="btn btn-sm btn-outline-primary"
+               hx-get="{% url 'interactions:thread-detail' thread.pk %}"
+               hx-target="#discussion-container"
+               hx-swap="innerHTML">View Discussion</a>
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-muted">No discussions yet. Be the first to ask a question!</p>
+    {% endfor %}
+</div>

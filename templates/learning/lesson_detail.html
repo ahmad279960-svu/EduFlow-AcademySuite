@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lesson.title }} | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-1">{{ lesson.title }}</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="#">{{ course.title }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Lesson {{ lesson.order }}</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <button class="btn btn-success btn-lg">
+                <i class="fa-solid fa-check me-2"></i>Complete & Continue
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body p-4">
+                    <div class="bg-dark rounded text-white d-flex align-items-center justify-content-center" style="min-height: 450px;">
+                        <p class="fs-4">Lesson Content Area</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#discussion">
+                                <i class="fa-solid fa-comments me-2"></i>Discussion
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#ai-assistant">
+                                <i class="fa-solid fa-robot me-2"></i>AI Assistant
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body tab-content">
+                    <div class="tab-pane fade show active" id="discussion">
+                        </div>
+                    <div class="tab-pane fade" id="ai-assistant">
+                        </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ course.title }}</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for l in course.lessons.all %}
+                    <a href="{% url 'learning:lesson-detail' l.pk %}" class="list-group-item list-group-item-action {% if l.pk == lesson.pk %}active{% endif %}">
+                        Lesson {{ l.order }}: {{ l.title }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h2 mb-4">System Dashboard</h1>
+    <p class="text-muted">An overview of the entire EduFlow platform.</p>
+
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-success border-4 h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Users</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">4,521</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-primary border-4 h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Courses</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">150</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-book-open fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+
+    <div class="row">
+        <div class="col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">User Registrations (Last 12 Months)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="userRegistrationsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+         <div class="col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">User Roles Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4">
+                        <canvas id="userRolesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Chart 1: User Registrations (Line Chart)
+    const userRegCtx = document.getElementById('userRegistrationsChart').getContext('2d');
+    const userRegistrationsChart = new Chart(userRegCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            datasets: [{
+                label: 'New Users',
+                data: [120, 150, 190, 210, 250, 230, 270, 300, 310, 350, 380, 420], // Example data
+                backgroundColor: 'rgba(110, 203, 78, 0.1)',
+                borderColor: 'rgba(110, 203, 78, 1)',
+                borderWidth: 2,
+                tension: 0.3,
+                fill: true,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    // Chart 2: User Roles (Doughnut Chart)
+    const userRolesCtx = document.getElementById('userRolesChart').getContext('2d');
+    const userRolesChart = new Chart(userRolesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Students', 'Instructors', 'Supervisors', 'Admins', 'B2B Clients'],
+            datasets: [{
+                label: 'User Roles',
+                data: [3500, 500, 50, 21, 450], // Example data
+                backgroundColor: [
+                    '#1DA1F2',
+                    '#17BF63',
+                    '#FFAD1F',
+                    '#E0245E',
+                    '#657786'
+                ],
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+});
+</script>
+{% endblock %}

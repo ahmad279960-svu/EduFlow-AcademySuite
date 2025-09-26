@@ -1,0 +1,20 @@
+<div id="ai-chat-container">
+    <div id="ai-response-area" class="mb-3 p-3 bg-light rounded" style="min-height: 200px; max-height: 400px; overflow-y: auto;">
+        <p class="text-muted">Hello! I am your AI Assistant. How can I help you with this lesson?</p>
+    </div>
+
+    <form hx-post="{% url 'api:ai-assistant' %}"
+          hx-target="#ai-response-area"
+          hx-swap="innerHTML"
+          hx-indicator="#ai-spinner">
+        {% csrf_token %}
+        <input type="hidden" name="lesson_id" value="{{ lesson.pk }}">
+        <div class="input-group">
+            <input type="text" name="question" class="form-control" placeholder="Ask a question about this lesson..." required>
+            <button class="btn btn-primary" type="submit">
+                <span id="ai-spinner" class="spinner-border spinner-border-sm htmx-indicator" role="status" aria-hidden="true"></span>
+                Send
+            </button>
+        </div>
+    </form>
+</div>

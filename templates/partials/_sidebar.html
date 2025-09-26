@@ -1,0 +1,49 @@
+{% load static %}
+{% load user_roles %}
+
+<a href="{% url 'core:dashboard' %}" class="logo">
+    <img src="{% static 'images/logo_EduFlow-AcademySuite.png' %}" alt="EduFlow Logo">
+</a>
+
+<ul class="nav nav-pills flex-column mb-auto">
+    <li class="nav-item">
+        <a href="{% url 'core:dashboard' %}" class="nav-link text-white {% if request.resolver_match.view_name == 'core:dashboard' %}active{% endif %}">
+            <i class="fa-solid fa-house"></i>
+            Dashboard
+        </a>
+    </li>
+
+    {% if request.user|has_role:"admin" %}
+    <li>
+        <a href="{% url 'users:user-management' %}" class="nav-link text-white {% if 'users' in request.resolver_match.app_names %}active{% endif %}">
+            <i class="fa-solid fa-users"></i>
+            User Management
+        </a>
+    </li>
+    <li>
+        <a href="{% url 'reports:dashboard' %}" class="nav-link text-white {% if 'reports' in request.resolver_match.app_names %}active{% endif %}">
+            <i class="fa-solid fa-chart-line"></i>
+            Reports & Analytics
+        </a>
+    </li>
+    {% endif %}
+</ul>
+
+<div class="user-profile">
+    <div class="dropdown">
+        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser2" data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="{{ user.avatar_url|default:'https://via.placeholder.com/40' }}" alt="" width="32" height="32" class="rounded-circle me-2">
+            <strong>{{ user.username }}</strong>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser2">
+            <li><a class="dropdown-item" href="#">Profile</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <form class="d-inline" method="post" action="{% url 'core:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="dropdown-item">Sign out</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+</div>
