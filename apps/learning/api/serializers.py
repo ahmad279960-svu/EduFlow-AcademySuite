@@ -5,7 +5,7 @@ This module provides serializers for the learning models, controlling their
 JSON representation for the API endpoints.
 """
 from rest_framework import serializers
-from apps.learning.models import Course, LearningPath, Lesson
+from apps.learning.models import Course, Workshop, LearningPath, Lesson
 
 
 class LessonSerializer(serializers.ModelSerializer):
@@ -33,6 +33,27 @@ class CourseSerializer(serializers.ModelSerializer):
             "instructor",
             "category",
             "status",
+            "lessons",
+        ]
+
+
+class WorkshopSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Workshop model.
+    """
+    lessons = LessonSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Workshop
+        fields = [
+            "id",
+            "title",
+            "description",
+            "instructor",
+            "workshop_type",
+            "category",
+            "duration_days",
+            "total_hours",
             "lessons",
         ]
 

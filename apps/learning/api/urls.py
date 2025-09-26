@@ -6,11 +6,12 @@ DRF's DefaultRouter to automatically generate standard URLs for the viewsets.
 """
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import CourseViewSet, LearningPathViewSet
+from .views import CourseViewSet, WorkshopViewSet, LearningPathViewSet
 
 # Create a router and register our viewsets with it.
 router = DefaultRouter()
 router.register(r"courses", CourseViewSet, basename="course")
+router.register(r"workshops", WorkshopViewSet, basename="workshop")
 router.register(r"learning-paths", LearningPathViewSet, basename="learningpath")
 
 # The API URLs are determined automatically by the router.

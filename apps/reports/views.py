@@ -9,61 +9,65 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import render
 from django.views import View
 
+from .services.pdf_generator import PDFReportGenerator
+from apps.enrollment.models import Enrollment
+from apps.users.models import CustomUser
+
 
 class ReportDashboardView(LoginRequiredMixin, UserPassesTestMixin, View):
     """
-    A view that displays the report generation dashboard.
+    A view that displays the report generation dashboard and handles report creation.
 
     This dashboard provides a user interface with forms and filters that allow
-    authorized users to generate specific reports (e.g., system-wide user
-    activity, course completion rates). The actual report generation is
-    delegated to services.
+    authorized users to generate specific reports. The actual report generation
+    is delegated to dedicated services.
     """
 
     def test_func(self):
         """
         Ensures only admins and supervisors can access the reports dashboard.
-
-        :returns: True if the user is authorized, False otherwise.
-        :rtype: bool
         """
-        return self.request.user.role in ["admin", "supervisor"]
+        return self.request.user.role in [CustomUser.Roles.ADMIN, CustomUser.Roles.SUPERVISOR]
 
     def get(self, request, *args, **kwargs):
         """
         Handles GET requests by rendering the report dashboard template.
-
-        :param request: The HTTP request object.
-        :type request: django.http.HttpRequest
-        :returns: The rendered report dashboard page.
-        :rtype: django.http.HttpResponse
         """
-        # In a real application, context would include lists of courses, users, etc.,
-        # to populate the filter dropdowns in the template.
-        context = {}
-        return render(request, "reports/report_dashboard.html", context)
+        return render(request, "reports/report_dashboard.html")
 
     def post(self, request, *args, **kwargs):
         """
-        Handles POST requests to generate a specific report.
+        Handles POST requests to generate a specific report based on form data.
 
-        This method would parse the form data to understand which report is
-        requested and with which filters, then call the appropriate service.
-
-        :param request: The HTTP request object.
-        :type request: django.http.HttpRequest
-        :returns: An HttpResponse containing the generated report file.
-        :rtype: django.http.HttpResponse
+        This method parses the form data to determine the requested report type
+        and filters, fetches the corresponding data, and calls the appropriate
+        generation service (e.g., PDFReportGenerator).
         """
-        # report_type = request.POST.get('report_type')
-        # date_from = request.POST.get('date_from')
-        # ... and other filters ...
+        report_type = request.POST.get('report_type')
+        
+        if report_type == 'student_performance':
+            # Fetch data for the student performance report
+            enrollments = Enrollment.objects.select_related('student', 'course').filter(
+                progress__gt=0
+            ).order_by('student__full_name', 'course__title')
 
-        # # Example logic:
-        # if report_type == 'student_performance_pdf':
-        #     data = fetch_student_data(...)
-        #     pdf_service = PDFReportGenerator(data, "Student Performance Report")
-        #     return pdf_service.generate()
+            report_data = [
+                {
+                    "student_name": enrollment.student.full_name or enrollment.student.username,
+                    "course_title": enrollment.course.title,
+                    "progress": enrollment.progress,
+                    "status": enrollment.get_status_display(),
+                }
+                for enrollment in enrollments
+            ]
 
-        # For now, this is a placeholder.
-        pass
+            # Utilize the PDF generation service
+            pdf_service = PDFReportGenerator(
+                data=report_data,
+                report_title="Student Performance Summary",
+                template_path="reports/student_performance_template.html"
+            )
+            return pdf_service.generate()
+
+        # If other report types are added, they can be handled here.
+        return render(request, "reports/report_dashboard.html", {"error": "Invalid report type selected."})

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Progress for {{ enrollment.student.username }} | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-1">Detailed Progress</h1>
+            <p class="text-muted mb-0">
+                Showing progress for <strong>{{ enrollment.student.full_name|default:enrollment.student.username }}</strong> 
+                in <strong>{{ enrollment.course.title }}</strong>
+            </p>
+        </div>
+        <a href="{% url 'learning:course-student-progress' enrollment.course.pk %}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-2"></i>Back to All Students
+        </a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h5>{{ enrollment.student.full_name|default:enrollment.student.username }}</h5>
+                    <p class="text-muted mb-1">{{ enrollment.student.email }}</p>
+                    <p class="text-muted">Enrolled on: {{ enrollment.enrollment_date|date:"F d, Y" }}</p>
+                </div>
+                <div class="col-md-4">
+                    <h6>Overall Progress</h6>
+                    <div class="progress" style="height: 1.5rem;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: {{ enrollment.progress }}%;" aria-valuenow="{{ enrollment.progress }}" aria-valuemin="0" aria-valuemax="100">
+                            <strong>{{ enrollment.progress|floatformat:0 }}%</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Lesson Breakdown</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-borderless table-striped mb-0">
+                    <tbody>
+                        {% for lesson_progress in lesson_progress_list %}
+                        <tr>
+                            <td class="align-middle" style="width: 50%;">
+                                <strong>Lesson {{ lesson_progress.lesson.order }}: {{ lesson_progress.lesson.title }}</strong>
+                            </td>
+                            <td class="align-middle text-center">
+                                {% if lesson_progress.status == 'completed' %}
+                                    <span class="badge bg-success fs-6">Completed</span>
+                                    {% if lesson_progress.attendance_date %}
+                                    <small class="d-block text-muted mt-1">{{ lesson_progress.attendance_date|date:"Y-m-d" }}</small>
+                                    {% endif %}
+                                {% elif lesson_progress.status == 'in_progress' %}
+                                    <span class="badge bg-info fs-6">In Progress</span>
+                                {% else %}
+                                    <span class="badge bg-secondary fs-6">Not Started</span>
+                                {% endif %}
+                            </td>
+                            <td class="align-middle">
+                                <textarea class="form-control form-control-sm" rows="1" placeholder="Add private notes for this student...">{{ lesson_progress.instructor_notes }}</textarea>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer text-end">
+            <button class="btn btn-primary">Save All Notes</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -5,20 +5,34 @@
     <title>{{ report_title }}</title>
     <style>
         @page {
-            size: A4;
+            size: A4 portrait;
             margin: 1.5cm;
+            @bottom-center {
+                content: "Page " counter(page) " of " counter(pages);
+                font-family: 'Helvetica', 'Arial', sans-serif;
+                font-size: 9pt;
+                color: #888;
+            }
         }
         body {
             font-family: 'Helvetica', 'Arial', sans-serif;
             font-size: 10pt;
             color: #333;
         }
-        h1 {
+        .header {
             text-align: center;
-            color: #1A2E44; /* Navy */
-            border-bottom: 2px solid #6ECB4E; /* Green */
+            border-bottom: 2px solid #0d6efd;
             padding-bottom: 10px;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            color: #1d2d3f; /* --color-navy */
+            margin: 0;
+            font-size: 24pt;
+        }
+        .header .report-date {
+            color: #6c757d; /* --color-text-secondary */
+            font-size: 10pt;
         }
         table {
             width: 100%;
@@ -26,21 +40,22 @@
             margin-top: 20px;
         }
         th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
+            border: 1px solid #dee2e6; /* --color-border */
+            padding: 10px;
             text-align: left;
+            vertical-align: top;
         }
         th {
-            background-color: #F5F7FA; /* Light Gray */
-            color: #1A2E44;
+            background-color: #f8f9fa; /* --color-bg-light */
+            color: #1d2d3f;
             font-weight: bold;
         }
         tr:nth-child(even) {
-            background-color: #f9f9f9;
+            background-color: #f8f9fa;
         }
         .footer {
             position: fixed;
-            bottom: -20px;
+            bottom: -40px; /* Position it outside the margin box */
             left: 0;
             right: 0;
             text-align: center;
@@ -51,18 +66,21 @@
 </head>
 <body>
     <div class="footer">
-        EduFlow AcademySuite | Generated on {% now "F d, Y" %} | Page <pdf:page-number />
+        EduFlow AcademySuite | Generated on {% now "F d, Y" %}
     </div>
 
-    <h1>{{ report_title }}</h1>
+    <div class="header">
+        <h1>{{ report_title }}</h1>
+        <p class="report-date">Data accurate as of {% now "F d, Y, P" %}</p>
+    </div>
 
     <table>
         <thead>
             <tr>
-                <th>Student Name</th>
-                <th>Course Title</th>
-                <th>Progress (%)</th>
-                <th>Status</th>
+                <th style="width: 30%;">Student Name</th>
+                <th style="width: 45%;">Course Title</th>
+                <th style="width: 15%;">Progress (%)</th>
+                <th style="width: 10%;">Status</th>
             </tr>
         </thead>
         <tbody>
@@ -70,12 +88,14 @@
                 <tr>
                     <td>{{ entry.student_name }}</td>
                     <td>{{ entry.course_title }}</td>
-                    <td>{{ entry.progress }}</td>
+                    <td>{{ entry.progress|floatformat:2 }}</td>
                     <td>{{ entry.status }}</td>
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="4" style="text-align: center;">No data available for this report.</td>
+                    <td colspan="4" style="text-align: center; padding: 20px;">
+                        No data available for this report.
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>

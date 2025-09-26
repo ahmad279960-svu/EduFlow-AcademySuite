@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Student Progress in {{ course.title }} | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-1">Student Progress</h1>
+            <p class="text-muted mb-0">Monitoring students in <strong>{{ course.title }}</strong></p>
+        </div>
+        <a href="{% url 'learning:course-manage' course.pk %}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-2"></i>Back to Course Management
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">{{ enrollments.count }} Student(s) Enrolled</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">Student Name</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Enrollment Date</th>
+                            <th scope="col">Progress</th>
+                            <th scope="col">Status</th>
+                            <th scope="col" class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for enrollment in enrollments %}
+                        <tr>
+                            <td><strong>{{ enrollment.student.full_name|default:enrollment.student.username }}</strong></td>
+                            <td>{{ enrollment.student.email }}</td>
+                            <td>{{ enrollment.enrollment_date|date:"Y-m-d" }}</td>
+                            <td>
+                                <div class="progress" style="height: 1.25rem;">
+                                    <div class="progress-bar" role="progressbar" style="width: {{ enrollment.progress }}%;" aria-valuenow="{{ enrollment.progress }}" aria-valuemin="0" aria-valuemax="100">
+                                        {{ enrollment.progress|floatformat:0 }}%
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if enrollment.status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                {% else %}
+                                    <span class="badge bg-info">In Progress</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'learning:student-detail-progress' enrollment.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fa-solid fa-eye me-1"></i> View Details
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center p-4">
+                                <p class="mb-0 text-muted">No students are enrolled in this course yet.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

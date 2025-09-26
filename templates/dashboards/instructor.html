@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container-fluid">
     <h1 class="h2 mb-1">Instructor Dashboard</h1>
-    <p class="text-muted mb-4">Manage your courses and engage with your students.</p>
+    <p class="text-muted mb-4">Manage your content and engage with your students.</p>
 
     <div class="row">
         <div class="col-md-4">
@@ -16,7 +16,7 @@
         </div>
         <div class="col-md-4">
             <div class="card text-center p-3 shadow-sm">
-                <h5 class="card-title text-muted">Active Courses</h5>
+                <h5 class="card-title text-muted">Active Content</h5>
                 <p class="card-text display-4 fw-bold text-success">{{ instructor_stats.active_courses }}</p>
             </div>
         </div>
@@ -28,12 +28,24 @@
         </div>
     </div>
 
-    <div class="card mt-4">
+    <div class="card mt-4" id="content-list-container" hx-get="{% url 'core:dashboard' %}" hx-trigger="contentListChanged from:body" hx-target="#content-list-container">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">My Content</h5>
             <div>
-                <a href="#" class="btn btn-outline-primary">Create New Workshop</a>
-                <a href="#" class="btn btn-primary">Create New Course</a>
+                <button class="btn btn-outline-primary"
+                        hx-get="{% url 'learning:workshop-create' %}"
+                        hx-target="#htmx-modal-dialog"
+                        hx-swap="innerHTML"
+                        data-bs-toggle="modal" data-bs-target="#htmx-modal">
+                    Create New Workshop
+                </button>
+                <button class="btn btn-primary"
+                        hx-get="{% url 'learning:course-create' %}"
+                        hx-target="#htmx-modal-dialog"
+                        hx-swap="innerHTML"
+                        data-bs-toggle="modal" data-bs-target="#htmx-modal">
+                    Create New Course
+                </button>
             </div>
         </div>
         <div class="card-body p-0">
@@ -42,9 +54,8 @@
                     <thead>
                         <tr>
                             <th scope="col">Title</th>
-                            <th scope="col">Category</th>
-                            <th scope="col">Status</th>
-                            <th scope="col">Enrollments</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Enrollments/Assignments</th>
                             <th scope="col" class="text-end">Actions</th>
                         </tr>
                     </thead>
@@ -52,30 +63,42 @@
                         {% for course in courses_taught %}
                         <tr>
                             <td><strong>{{ course.title }}</strong></td>
-                            <td>{{ course.category }}</td>
-                            <td>
-                                {% if course.status == 'published' %}
-                                    <span class="badge bg-success">Published</span>
-                                {% elif course.status == 'draft' %}
-                                    <span class="badge bg-warning text-dark">Draft</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">Archived</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ course.enrollments.count }}</td>
+                            <td><span class="badge bg-info">Course</span></td>
+                            <td>{{ course.enrollments.count }} Student(s)</td>
                             <td class="text-end">
+                                <a href="{% url 'learning:course-student-progress' course.pk %}" class="btn btn-sm btn-outline-success">
+                                    <i class="fa-solid fa-chart-simple me-1"></i> Track Progress
+                                </a>
                                 <a href="{% url 'learning:course-manage' course.pk %}" class="btn btn-sm btn-outline-primary">
-                                    <i class="fa-solid fa-pencil me-1"></i> Manage
+                                    <i class="fa-solid fa-pencil me-1"></i> Manage Content
                                 </a>
                             </td>
                         </tr>
-                        {% empty %}
+                        {% endfor %}
+                        
+                        {% for workshop in workshops_taught %}
                         <tr>
-                            <td colspan="5" class="text-center p-4">
-                                <p class="mb-0 text-muted">You have not created any courses or workshops yet.</p>
+                            <td><strong>{{ workshop.title }}</strong></td>
+                            <td><span class="badge" style="background-color: #6f42c1; color: white;">Workshop</span></td>
+                            <td>{{ workshop.contracts.first.enrolled_students.count | default:0 }} Student(s)</td>
+                            <td class="text-end">
+                                <a href="{% url 'learning:workshop-attendance' workshop.lessons.first.pk %}" class="btn btn-sm btn-outline-success">
+                                    <i class="fa-solid fa-user-check me-1"></i> Track Attendance
+                                </a>
+                                <a href="{% url 'learning:workshop-manage' workshop.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fa-solid fa-pencil me-1"></i> Manage Content
+                                </a>
                             </td>
                         </tr>
                         {% endfor %}
+
+                        {% if not courses_taught and not workshops_taught %}
+                        <tr>
+                            <td colspan="4" class="text-center p-4">
+                                <p class="mb-0 text-muted">You have not created any content yet.</p>
+                            </td>
+                        </tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>

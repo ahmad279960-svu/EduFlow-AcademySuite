@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Attendance for {{ lesson.title }} | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-1">Workshop Attendance</h1>
+            <p class="text-muted mb-0">
+                Marking attendance for session <strong>{{ lesson.title }}</strong> 
+                in <strong>{{ lesson.workshop.title }}</strong>
+            </p>
+        </div>
+        <a href="{% url 'learning:workshop-manage' lesson.workshop.pk %}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-2"></i>Back to Workshop Management
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Attendance Sheet</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">Student Name</th>
+                            <th scope="col">Status</th>
+                            <th scope="col" class="text-center">Mark Attendance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr>
+                            <td class="align-middle">
+                                <strong>{{ student.full_name|default:student.username }}</strong>
+                            </td>
+                            <td class="align-middle">
+                                <span class="badge bg-secondary">Pending</span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-success">
+                                        <i class="fa-solid fa-check"></i> Present
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger">
+                                        <i class="fa-solid fa-times"></i> Absent
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-warning text-dark">
+                                        <i class="fa-solid fa-clock"></i> Late
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center p-4">
+                                <p class="mb-0 text-muted">There are no students assigned to this workshop's contract yet.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer text-end">
+            <button class="btn btn-primary">Save Attendance Records</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
